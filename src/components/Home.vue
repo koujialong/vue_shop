@@ -5,32 +5,39 @@
             <el-button type="info" @click="logout">退出</el-button>
         </el-header>
         <el-container>
-            <el-aside width="250px">
+            <el-aside :width="collapse?'64px':'200px'">
+                <div class="toggle-button" @click="toggleCollapse">|||</div>
                 <el-menu
-                        default-active="2"
+                        :collapse="collapse"
+                        :collapse-transition="false"
+                        :default-active="activePath"
                         class="el-menu-vertical-demo"
                         @open="handleOpen"
                         @close="handleClose"
                         background-color="#333744"
                         text-color="#fff"
-                        active-text-color="#ffd04b">
+                        unique-opened
+                        style="border-right: 0"
+                        router
+                        active-text-color="#409eff">
                     <!--一级菜单的模板区域-->
-                    <el-submenu :key="item.id" v-if="item.children[0]" index="1"
-                                v-for="(item,index) in menuData" :index="index+1+''">
+                    <el-submenu :key="item.id" v-if="item.children[0]" v-for="(item,index) in menuData"
+                                :index="index+1+''">
                         <template slot="title">
                             <!--图标-->
                             <i class="el-icon-menu"></i>
                             <span>{{item.name}}</span>
                         </template>
                         <el-menu-item v-for="child in item.children"
-                                      :index="child.url" :key="item.id">
-<!--                            <i class="el-icon-location"></i>-->
+                                      :index="child.url" :key="item.id" @click="saveNavState(child.url)">
                             <span>{{child.name}}</span>
                         </el-menu-item>
                     </el-submenu>
                 </el-menu>
             </el-aside>
-            <el-main>Main</el-main>
+            <el-main>
+                <router-view></router-view>
+            </el-main>
         </el-container>
     </el-container>
 </template>
@@ -40,7 +47,10 @@
     name: 'home',
     data(){
       return{
-        menuData:[]
+        menuData:[],
+        collapse:false,
+        //被激活的链接地址
+        activePath:''
       }
     },
     methods: {
@@ -81,7 +91,8 @@
         }
         for (let i=0;i<arr.length;i++){
           for (let l=0;l<tow.length;l++){
-            if (tow[l].parentId==arr[i].id){
+            //TODO 测试
+            if (tow[l].parentId==arr[i].id&&arr[i].name=="用户管理"){
               let show = arr[i].children.filter(item=>{
                 return item.id === tow[l].id
               })
@@ -93,7 +104,17 @@
         }
         console.log(arr)
         this.menuData=arr;
+      },
+      toggleCollapse(){
+        this.collapse=!this.collapse;
+      },
+      saveNavState(activePath){
+        window.sessionStorage.setItem('activePath',activePath);
+        this.activePath=activePath
       }
+    },
+    created () {
+      this.activePath=window.sessionStorage.getItem("activePath")
     },
     mounted() {
       this.getMenu();
@@ -122,5 +143,14 @@
 
     .el-main {
         background-color: #eaedf1;
+    }
+    .toggle-button{
+        background-color: #4a5064;
+        font-size: 10px;
+        line-height: 24px;
+        color: #fff;
+        text-align: center;
+        letter-spacing: 0.2em;
+        cursor: pointer;
     }
 </style>
